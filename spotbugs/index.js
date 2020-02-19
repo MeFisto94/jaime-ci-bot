@@ -6,7 +6,7 @@ async function gradlew(task) {
 
 async function main() {
 await exec("pwd").then(out => console.log(out.stdout));
-await gradlew("spotbugsMain -Pxml-reports=true").then(out => console.log(out.stderr)).catch(err => { console.error(err) });
+await gradlew("spotbugsMain -Pxml-reports=true --continue").then(out => console.log(out.stderr)).catch(err => { console.error(err) });
 await exec("pwd").then(out => console.log(out));
 // jme3-core/build/reports/tests/
 }
