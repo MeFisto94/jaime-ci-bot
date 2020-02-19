@@ -1,6 +1,7 @@
 const exec = require('child-process-promise').exec;
 const glob = require('glob-promise');
 const xml2js = require('xml2js');
+const fs = require('fs');
 
 async function gradlew(task) {
     return exec("cd ../../ && java -cp gradle/wrapper/gradle-wrapper.jar org.gradle.wrapper.GradleWrapperMain " + task)
@@ -12,7 +13,7 @@ await gradlew("spotbugsMain -Pxml-reports=true --continue").then(out => console.
 glob('../../**/build/reports/spotbugs/main.xml').then(files => 
     files.forEach(file => {
         console.log(file);
-        xml2js.parseStringPromise(file /*, options */).then((result) => {
+        xml2js.parseStringPromise(fs.readFileSync(file) /*, options */).then((result) => {
             console.dir(result);
             console.log('Done');
           });
