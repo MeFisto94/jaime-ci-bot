@@ -16,7 +16,7 @@ reports = {};
 glob('../../**/build/reports/spotbugs/main.xml').then(files =>
     files.forEach(file => {
         xml2js.parseStringPromise(fs.readFileSync(file) /*, options */).then((result) => {
-            reports[file] = result["BugInstance"];
+            reports[file] = result["BugCollection"]["BugInstance"];
             console.dir(reports[file]);
           });
     })
