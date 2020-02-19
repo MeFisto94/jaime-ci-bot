@@ -4,7 +4,7 @@
   "description": "This utility will diff the SpotBugs results to be use on jMonkeyEngine's CI Repositories",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js"
   },
   "author": "MeFisto94",
   "license": "MIT",
