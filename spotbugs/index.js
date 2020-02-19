@@ -8,7 +8,9 @@ async function gradlew(task) {
 async function main() {
 //await exec("pwd").then(out => console.log(out.stdout));
 await gradlew("spotbugsMain -Pxml-reports=true --continue").then(out => console.log(out.stderr)).catch(err => { console.error(err) });
-glob('../../**/build/reports/spotbugs/main.xml').then(files => console.log(files));
+glob('../../**/build/reports/spotbugs/main.xml').then(files => { 
+    files.forEach(file => console.log(file));
+});
 // jme3-core/build/reports/spotbugs/
 }
 
