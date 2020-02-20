@@ -2,6 +2,7 @@ const exec = require('child-process-promise').exec;
 const glob = require('glob-promise');
 const xml2js = require('xml2js');
 const fs = require('fs');
+const util = require('util');
 
 async function gradlew(task) {
     return exec("cd ../../ && java -cp gradle/wrapper/gradle-wrapper.jar org.gradle.wrapper.GradleWrapperMain " + task)
