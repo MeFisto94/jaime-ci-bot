@@ -17,7 +17,8 @@ glob('../../**/build/reports/spotbugs/main.xml').then(files =>
     files.forEach(file => {
         xml2js.parseStringPromise(fs.readFileSync(file) /*, options */).then((result) => {
             reports[file] = result["BugCollection"]["BugInstance"];
-            console.dir(reports[file]);
+            // filter EL_EXPOSE_REP
+            console.log(util.inspect(rports[file], false, null)) // console.dir(reports[file]);
           });
     })
 );
