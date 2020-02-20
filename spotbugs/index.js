@@ -19,7 +19,7 @@ glob('../../**/build/reports/spotbugs/main.xml').then(files =>
         xml2js.parseStringPromise(fs.readFileSync(file) /*, options */).then((result) => {
             reports[file] = result["BugCollection"]["BugInstance"];
             // filter EL_EXPOSE_REP
-            console.log(util.inspect(rports[file], false, null)) // console.dir(reports[file]);
+            console.log(util.inspect(reports[file], false, null)) // console.dir(reports[file]);
           });
     })
 );
