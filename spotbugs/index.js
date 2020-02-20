@@ -3,7 +3,7 @@ const glob = require('glob-promise');
 const xml2js = require('xml2js');
 const fs = require('fs');
 const util = require('util');
-const comparators = require('comparators.js');
+const comparators = require('./comparators');
 
 async function gradlew(task) {
     return exec("cd ../../ && java -cp gradle/wrapper/gradle-wrapper.jar org.gradle.wrapper.GradleWrapperMain " + task)
