@@ -108,7 +108,7 @@ async function loadOldReports() {
     reports_new = await generateReportsAndAnalyse();
     reports_old = await loadOldReports();
 
-    const token = core.getInput('token');
+    const token = process.env.GITHUB_TOKEN;
     const octokit = new github.GitHub(token);
     console.log(github.context);
 
