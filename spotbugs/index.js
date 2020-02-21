@@ -148,15 +148,15 @@ async function loadOldReports() {
         }
     }
 
-    check_run = await context.github.checks.create(context.repo({
+    check_run = await octokit.checks.create({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
         name: 'SpotBugs Static Analysis Task',
-        head_branch: context.payload.check_suite.head_branch,
-        head_sha: context.payload.check_suite.head_sha,
-        //status: 'in_progress',
+        head_sha: github.context.sha,
         conclusion: check_succeded ? "success" : "failure",
         /*output: {
           title: 'Formatting',
           summary: 'The output will be ready soon!'
         }*/
-    }));
+    });
 })();
