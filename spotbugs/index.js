@@ -110,7 +110,7 @@ async function loadOldReports() {
 
     const token = process.env.GITHUB_TOKEN;
     const octokit = new github.GitHub(token);
-    console.log(github.context);
+    let success = true;
 
     for (let [key, value] of Object.entries(reports_new)) {
         if (reports_old[key]) {
@@ -119,6 +119,7 @@ async function loadOldReports() {
                 if (!reports_old[key].some(oldError => comparator(error, oldError))) {
                     //console.error("Warning: Found new bug " + util.inspect(error, false, null));
                     console.error("Warning: Found new bug " + format(error));
+                    success = false;
                 }
             });
         } else {
@@ -127,6 +128,7 @@ async function loadOldReports() {
                 //console.error("Warning: Found new bug " + format(error));
                 //console.error("Warning: Found new bug " + util.inspect(error, false, null));
             });
+            success = false;
         }
     }
 
@@ -145,4 +147,16 @@ async function loadOldReports() {
             });
         }
     }
+
+    check_run = await context.github.checks.create(context.repo({
+        name: 'SpotBugs Static Analysis Task',
+        head_branch: context.payload.check_suite.head_branch,
+        head_sha: context.payload.check_suite.head_sha,
+        //status: 'in_progress',
+        conclusion: check_succeded ? "success" : "failure",
+        /*output: {
+          title: 'Formatting',
+          summary: 'The output will be ready soon!'
+        }*/
+    }));
 })();
