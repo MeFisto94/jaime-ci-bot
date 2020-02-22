@@ -153,7 +153,7 @@ async function loadOldReports() {
         repo: github.context.repo.repo,
         name: 'SpotBugs Static Analysis Task',
         head_sha: github.context.sha,
-        conclusion: check_succeded ? "success" : "failure",
+        conclusion: success ? "success" : "failure",
         /*output: {
           title: 'Formatting',
           summary: 'The output will be ready soon!'
