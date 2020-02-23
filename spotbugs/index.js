@@ -15,7 +15,7 @@ let spotbugsPath = "build/reports/spotbugs/main.xml";
 let oldSpotbugsPath = ".github/spotbugs";
 
 async function gradlew(task) {
-    return exec("cd " + relativePath + " && java"+
+    return exec("cd " + relativePath + " && E:\\Programme\\jMonkeyEngine\\jdk\\bin\\java.exe"+
     " -cp gradle/wrapper/gradle-wrapper.jar org.gradle.wrapper.GradleWrapperMain " + task)
 }
 
@@ -121,13 +121,13 @@ async function loadOldReports() {
                 if (!reports_old[key].some(oldError => comparator(error, oldError))) {
                     //console.error("Warning: Found new bug " + util.inspect(error, false, null));
                     console.error("Warning: Found new bug " + format(error));
-                    new_bugs.push({bug: value, module: key});
+                    new_bugs.push({bug: error, module: key});
                 }
             });
         } else {
             console.error("Warning: Previously bugless module " + key +  " now has bugs!");
             value.forEach(error => {
-                new_bugs.push({bug: value, module: key});
+                new_bugs.push({bug: error, module: key});
                 //console.error("Warning: Found new bug " + format(error));
                 //console.error("Warning: Found new bug " + util.inspect(error, false, null));
             });
@@ -139,14 +139,14 @@ async function loadOldReports() {
             console.error("Now analyzing solved bugs for " + key);
             value.forEach(error => {
                 if (!reports_new[key].some(newError => comparator(error, newError))) {
-                    solved_bugs.push({bug: value, module: key});
+                    solved_bugs.push({bug: error, module: key});
                     console.error("Congratulations! Solved bug " + format(error));
                 }
             });
         } else {
             console.error("Congratulations! The module " + key + " has become bugless!");
             value.forEach(error => {
-                solved_bugs.push({bug: value, module: key});
+                solved_bugs.push({bug: error, module: key});
                 console.error("Congratulations! Solved bug " + format(error));
             });
         }
