@@ -156,7 +156,7 @@ async function loadOldReports() {
     summary = "# New Bugs\n";
     new_bugs.forEach(bug => summary += ("- " + format(bug.bug) + "\n"));
     summary += "# Solved old Bugs\n";
-    old_bugs.forEach(bug => summary += ("- " + format(bug.bug) + "\n"));
+    solved_bugs.forEach(bug => summary += ("- " + format(bug.bug) + "\n"));
 
     check_run = await octokit.checks.create({
         owner: github.context.repo.owner,
