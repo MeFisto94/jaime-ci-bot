@@ -15,7 +15,7 @@ let spotbugsPath = "build/reports/spotbugs/main.xml";
 let oldSpotbugsPath = ".github/spotbugs";
 
 async function gradlew(task) {
-    return exec("cd " + relativePath + " && E:\\Programme\\jMonkeyEngine\\jdk\\bin\\java.exe"+
+    return exec("cd " + relativePath + " && java"+
     " -cp gradle/wrapper/gradle-wrapper.jar org.gradle.wrapper.GradleWrapperMain " + task)
 }
 
