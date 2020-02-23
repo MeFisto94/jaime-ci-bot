@@ -108,9 +108,11 @@ async function loadOldReports() {
     reports_new = await generateReportsAndAnalyse();
     reports_old = await loadOldReports();
 
+    new_bugs = [];
+    solved_bugs = [];
+
     const token = process.env.GITHUB_TOKEN;
     const octokit = new github.GitHub(token);
-    let success = true;
 
     for (let [key, value] of Object.entries(reports_new)) {
         if (reports_old[key]) {
@@ -119,16 +121,16 @@ async function loadOldReports() {
                 if (!reports_old[key].some(oldError => comparator(error, oldError))) {
                     //console.error("Warning: Found new bug " + util.inspect(error, false, null));
                     console.error("Warning: Found new bug " + format(error));
-                    success = false;
+                    new_bugs.push({bug: value, module: key});
                 }
             });
         } else {
             console.error("Warning: Previously bugless module " + key +  " now has bugs!");
             value.forEach(error => {
+                new_bugs.push({bug: value, module: key});
                 //console.error("Warning: Found new bug " + format(error));
                 //console.error("Warning: Found new bug " + util.inspect(error, false, null));
             });
-            success = false;
         }
     }
 
@@ -137,16 +139,24 @@ async function loadOldReports() {
             console.error("Now analyzing solved bugs for " + key);
             value.forEach(error => {
                 if (!reports_new[key].some(newError => comparator(error, newError))) {
+                    solved_bugs.push({bug: value, module: key});
                     console.error("Congratulations! Solved bug " + format(error));
                 }
             });
         } else {
             console.error("Congratulations! The module " + key + " has become bugless!");
             value.forEach(error => {
-                console.error("Congratulations! Solved bug " + foremat(error));
+                solved_bugs.push({bug: value, module: key});
+                console.error("Congratulations! Solved bug " + format(error));
             });
         }
     }
+
+    success = new_bugs.length > 0;
+    summary = "# New Bugs\n";
+    new_bugs.forEach(bug => summary += ("- " + format(bug.bug) + "\n"));
+    summary += "# Solved old Bugs\n";
+    old_bugs.forEach(bug => summary += ("- " + format(bug.bug) + "\n"));
 
     check_run = await octokit.checks.create({
         owner: github.context.repo.owner,
@@ -154,9 +164,9 @@ async function loadOldReports() {
         name: 'SpotBugs Static Analysis Task',
         head_sha: github.context.sha,
         conclusion: success ? "success" : "failure",
-        /*output: {
-          title: 'Formatting',
-          summary: 'The output will be ready soon!'
-        }*/
+        output: {
+          title: 'SpotBugs Differential Report',
+          summary: summary
+        }
     });
 })();
