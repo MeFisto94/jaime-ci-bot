@@ -105,6 +105,18 @@ async function loadOldReports() {
 
 
 (async () => {
+    check_run = await octokit.checks.create({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        name: 'SpotBugs Static Analysis Task',
+        head_sha: github.context.sha,
+        conclusion: 'in_progress',
+        output: {
+          title: 'SpotBugs Differential Report',
+          summary: "We're analysing your work currently, it better be good!"
+        }
+    });
+    console.log(check_run);
     reports_new = await generateReportsAndAnalyse();
     reports_old = await loadOldReports();
 
@@ -160,7 +172,8 @@ async function loadOldReports() {
 
     err_too_long = "\n[...] and many more!";
 
-    check_run = await octokit.checks.create({
+    await octokit.checks.update({
+        check_run_id: check_run.data.id;
         owner: github.context.repo.owner,
         repo: github.context.repo.repo,
         name: 'SpotBugs Static Analysis Task',
@@ -168,7 +181,9 @@ async function loadOldReports() {
         conclusion: success ? "success" : "failure",
         output: {
           title: 'SpotBugs Differential Report',
-          summary: (summary.length < 65535) ? summary : (summary.substring(0, 65535 - err_too_long.length) + err_too_long)
+        //(summary.length < 65535) ? summary : (summary.substring(0, 65535 - err_too_long.length) + err_too_long),
+          summary: "New Bugs: " + new_bugs.length + "\nFixed Bugs: " + solved_bugs.length,
+          text: summary
         }
     });
 })();
