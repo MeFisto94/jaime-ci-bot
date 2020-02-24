@@ -173,7 +173,7 @@ async function loadOldReports() {
     err_too_long = "\n[...] and many more!";
 
     await octokit.checks.update({
-        check_run_id: check_run.data.id;
+        check_run_id: check_run.data.id,
         owner: github.context.repo.owner,
         repo: github.context.repo.repo,
         name: 'SpotBugs Static Analysis Task',
