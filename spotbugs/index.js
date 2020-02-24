@@ -113,7 +113,7 @@ async function loadOldReports() {
         repo: github.context.repo.repo,
         name: 'SpotBugs Static Analysis Task',
         head_sha: github.context.sha,
-        conclusion: 'in_progress',
+        status: 'in_progress',
         output: {
           title: 'SpotBugs Differential Report',
           summary: "We're analysing your work currently, it better be good!"
