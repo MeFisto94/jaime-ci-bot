@@ -158,6 +158,8 @@ async function loadOldReports() {
     summary += "# Solved old Bugs\n";
     solved_bugs.forEach(bug => summary += ("- " + format(bug.bug) + "\n"));
 
+    err_too_long = "\n[...] and many more!";
+
     check_run = await octokit.checks.create({
         owner: github.context.repo.owner,
         repo: github.context.repo.repo,
@@ -166,7 +168,7 @@ async function loadOldReports() {
         conclusion: success ? "success" : "failure",
         output: {
           title: 'SpotBugs Differential Report',
-          summary: summary
+          summary: (summary.length < 65535) ? summary : (summary.substring(0, 65535 - err_too_long.length) + err_too_long)
         }
     });
 })();
