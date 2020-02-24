@@ -105,6 +105,9 @@ async function loadOldReports() {
 
 
 (async () => {
+    const token = process.env.GITHUB_TOKEN;
+    const octokit = new github.GitHub(token);
+
     check_run = await octokit.checks.create({
         owner: github.context.repo.owner,
         repo: github.context.repo.repo,
@@ -117,14 +120,12 @@ async function loadOldReports() {
         }
     });
     console.log(check_run);
+
     reports_new = await generateReportsAndAnalyse();
     reports_old = await loadOldReports();
 
     new_bugs = [];
     solved_bugs = [];
-
-    const token = process.env.GITHUB_TOKEN;
-    const octokit = new github.GitHub(token);
 
     for (let [key, value] of Object.entries(reports_new)) {
         if (reports_old[key]) {
