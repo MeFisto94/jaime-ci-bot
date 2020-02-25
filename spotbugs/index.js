@@ -176,7 +176,7 @@ async function loadOldReports() {
     new_bugs.forEach(bug => {
         const src = bug.bug.SourceLine ? bug.bug.SourceLine : (bug.bug.Method ? bug.bug.Method.SourceLine : (bug.bug.Field ? bug.bug.Field.SourceLine : undefined));
 
-        if (srce) {
+        if (src) {
             src.forEach(line => {
                 res.push({
                     path: bug.module + "/src/main/java/" + line.$.sourcepath,
