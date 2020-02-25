@@ -176,26 +176,24 @@ async function loadOldReports() {
 
     new_bugs.forEach(bug => {
         bug.bug.SourceLine.forEach(line => {
-            console.log(line);
             res.push({
-                path: bug.module + "/" + line.sourcePath,
-                start_line: line.start,
-                end_line: line.end,
+                path: bug.module + "/" + line.$.sourcePath,
+                start_line: line.$.start,
+                end_line: line.$.end,
                 annotation_level: bug.bug.priority == "1" ? "failure" : "warning",
-                message: "A new potential bug 🐛 has been introduced here!\nCategory: " + bug.bug.category + "\nType: [" + bug.bug.type + "](https://spotbugs.readthedocs.io/en/latest/bugDescriptions.html)"
+                message: "A new potential bug 🐛 has been introduced here!\nCategory: " + bug.bug.$.category + "\nType: [" + bug.bug.$.type + "](https://spotbugs.readthedocs.io/en/latest/bugDescriptions.html)"
             });
         });
     });
 
     solved_bugs.forEach(bug => {
         bug.bug.SourceLine.forEach(line => {
-            console.log(line);
             res.push({
-                path: bug.module + "/" + line.sourcePath,
-                start_line: line.start,
-                end_line: line.end,
+                path: bug.module + "/" + line.$.sourcePath,
+                start_line: line.$.start,
+                end_line: line.$.end,
                 annotation_level: "notice",
-                message: "🎉 This bug has been solved! 🎊\nCategory: " + bug.bug.category + "\nType: [" + bug.bug.type + "](https://spotbugs.readthedocs.io/en/latest/bugDescriptions.html)"
+                message: "🎉 This bug has been solved! 🎊\nCategory: " + bug.bug.$.category + "\nType: [" + bug.bug.$.type + "](https://spotbugs.readthedocs.io/en/latest/bugDescriptions.html)"
             });
         });
     });
