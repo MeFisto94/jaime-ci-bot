@@ -166,9 +166,9 @@ async function loadOldReports() {
     }
 
     success = new_bugs.length > 0;
-    summary = "# New Bugs\n";
+    summary = "# New Bugs: " + new_bugs.length + "\n";
     new_bugs.forEach(bug => summary += ("- " + format(bug.bug) + "\n"));
-    summary += "# Solved old Bugs\n";
+    summary += "# Solved old Bugs: " + solved_bugs.length + "\n";
     solved_bugs.forEach(bug => summary += ("- " + format(bug.bug) + "\n"));
 
     err_too_long = "\n[...] and many more!";
@@ -177,7 +177,7 @@ async function loadOldReports() {
     new_bugs.forEach(bug => {
         bug.bug.SourceLine.forEach(line => {
             res.push({
-                path: bug.module + "/" + line.$.sourcepath,
+                path: bug.module + "/src/main/java/" + line.$.sourcepath,
                 start_line: line.$.start,
                 end_line: line.$.end,
                 annotation_level: bug.bug.priority == "1" ? "failure" : "warning",
@@ -189,7 +189,7 @@ async function loadOldReports() {
     solved_bugs.forEach(bug => {
         bug.bug.SourceLine.forEach(line => {
             res.push({
-                path: bug.module + "/" + line.$.sourcepath,
+                path: bug.module + "/src/main/java/" + line.$.sourcepath,
                 start_line: line.$.start,
                 end_line: line.$.end,
                 annotation_level: "notice",
