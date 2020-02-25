@@ -172,19 +172,53 @@ async function loadOldReports() {
     solved_bugs.forEach(bug => summary += ("- " + format(bug.bug) + "\n"));
 
     err_too_long = "\n[...] and many more!";
+    const res = [];
 
-    await octokit.checks.update({
-        check_run_id: check_run.data.id,
-        owner: github.context.repo.owner,
-        repo: github.context.repo.repo,
-        name: 'SpotBugs Static Analysis Task',
-        head_sha: github.context.sha,
-        conclusion: success ? "success" : "failure",
-        output: {
-          title: 'SpotBugs Differential Report',
-        //(summary.length < 65535) ? summary : (summary.substring(0, 65535 - err_too_long.length) + err_too_long),
-          summary: "New Bugs: " + new_bugs.length + "\nFixed Bugs: " + solved_bugs.length,
-          text: summary
-        }
+    new_bugs.forEach(bug => {
+        bug.bug.SourceLine.forEach(line => {
+            res.push({
+                path: bug.module + "/" + line.sourcePath,
+                start_line: line.start,
+                end_line: line.end,
+                annotation_level: bug.bug.priority == "1" ? "failure" : "warning",
+                message: "A new potential bug 🐛 has been introduced here!\nCategory: " + bug.bug.category + "\nType: [" + bug.bug.type + "](https://spotbugs.readthedocs.io/en/latest/bugDescriptions.html)"
+            });
+        });
+    });
+
+    solved_bugs.forEach(bug => {
+        bug.bug.SourceLine.forEach(line => {
+            res.push({
+                path: bug.module + "/" + line.sourcePath,
+                start_line: line.start,
+                end_line: line.end,
+                annotation_level: "notice",
+                message: "🎉 This bug has been solved! 🎊\nCategory: " + bug.bug.category + "\nType: [" + bug.bug.type + "](https://spotbugs.readthedocs.io/en/latest/bugDescriptions.html)"
+            });
+        });
+    });
+
+    // we have to fill res with all the file annotations.
+    const updates = [];
+
+    while (res.length) {
+      updates.push(res.splice(0, 50)) // Only 50 annotations allowed per request
+    }
+
+    updates.forEach(annotations => {
+        await octokit.checks.update({
+            check_run_id: check_run.data.id,
+            owner: github.context.repo.owner,
+            repo: github.context.repo.repo,
+            conclusion: success ? "success" : "failure",
+            output: {
+                title: 'SpotBugs Differential Report',
+                // @TODO: We don't need this anymore when we have annotations
+                //(summary.length < 65535) ? summary : (summary.substring(0, 65535 - err_too_long.length) + err_too_long),
+                summary: "New Bugs: " + new_bugs.length + "\nFixed Bugs: " + solved_bugs.length,
+                text: summary,
+                annotations: annotations
+            }
+        });
     });
 })();
