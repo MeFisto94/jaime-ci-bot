@@ -119,7 +119,6 @@ async function loadOldReports() {
           summary: "We're analysing your work currently, it better be good!"
         }
     });
-    console.log(check_run);
 
     reports_new = await generateReportsAndAnalyse();
     reports_old = await loadOldReports();
