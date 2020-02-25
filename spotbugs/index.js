@@ -174,8 +174,10 @@ async function loadOldReports() {
     const res = [];
 
     new_bugs.forEach(bug => {
-        if (bug.bug.SourceLine) {
-            bug.bug.SourceLine.forEach(line => {
+        const src = bug.bug.SourceLine ? bug.bug.SourceLine : (bug.bug.Method ? bug.bug.Method.SourceLine : (bug.bug.Field ? bug.bug.Field.SourceLine : undefined));
+
+        if (srce) {
+            src.forEach(line => {
                 res.push({
                     path: bug.module + "/src/main/java/" + line.$.sourcepath,
                     start_line: line.$.start,
@@ -191,8 +193,9 @@ async function loadOldReports() {
     });
 
     solved_bugs.forEach(bug => {
-        if (bug.bug.SourceLine) {
-            bug.bug.SourceLine.forEach(line => {
+        const src = bug.bug.SourceLine ? bug.bug.SourceLine : (bug.bug.Method ? bug.bug.Method.SourceLine : (bug.bug.Field ? bug.bug.Field.SourceLine : undefined));
+        if (src) {
+            src.forEach(line => {
                 res.push({
                     path: bug.module + "/src/main/java/" + line.$.sourcepath,
                     start_line: line.$.start,
