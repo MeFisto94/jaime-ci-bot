@@ -174,27 +174,37 @@ async function loadOldReports() {
     const res = [];
 
     new_bugs.forEach(bug => {
-        bug.bug.SourceLine.forEach(line => {
-            res.push({
-                path: bug.module + "/src/main/java/" + line.$.sourcepath,
-                start_line: line.$.start,
-                end_line: line.$.end,
-                annotation_level: bug.bug.priority == "1" ? "failure" : "warning",
-                message: "A new potential bug 🐛 has been introduced here!\nCategory: " + bug.bug.$.category + "\nType: [" + bug.bug.$.type + "](https://spotbugs.readthedocs.io/en/latest/bugDescriptions.html)"
+        if (bug.bug.SourceLine) {
+            bug.bug.SourceLine.forEach(line => {
+                res.push({
+                    path: bug.module + "/src/main/java/" + line.$.sourcepath,
+                    start_line: line.$.start,
+                    end_line: line.$.end,
+                    annotation_level: bug.bug.priority == "1" ? "failure" : "warning",
+                    message: "A new potential bug 🐛 has been introduced here!\nCategory: " + bug.bug.$.category + "\nType: [" + bug.bug.$.type + "](https://spotbugs.readthedocs.io/en/latest/bugDescriptions.html)"
+                });
             });
-        });
+        } else {
+            console.error("Warning: Found a bug without a SourceLine Attribute!!");
+            console.dir(bug.bug);
+        }
     });
 
     solved_bugs.forEach(bug => {
-        bug.bug.SourceLine.forEach(line => {
-            res.push({
-                path: bug.module + "/src/main/java/" + line.$.sourcepath,
-                start_line: line.$.start,
-                end_line: line.$.end,
-                annotation_level: "notice",
-                message: "🎉 This bug has been solved! 🎊\nCategory: " + bug.bug.$.category + "\nType: [" + bug.bug.$.type + "](https://spotbugs.readthedocs.io/en/latest/bugDescriptions.html)"
+        if (bug.bug.SourceLine) {
+            bug.bug.SourceLine.forEach(line => {
+                res.push({
+                    path: bug.module + "/src/main/java/" + line.$.sourcepath,
+                    start_line: line.$.start,
+                    end_line: line.$.end,
+                    annotation_level: "notice",
+                    message: "🎉 This bug has been solved! 🎊\nCategory: " + bug.bug.$.category + "\nType: [" + bug.bug.$.type + "](https://spotbugs.readthedocs.io/en/latest/bugDescriptions.html)"
+                });
             });
-        });
+        } else {
+            console.error("Warning: Found a bug without a SourceLine Attribute!!");
+            console.dir(bug.bug);
+        }
     });
 
     // we have to fill res with all the file annotations.
