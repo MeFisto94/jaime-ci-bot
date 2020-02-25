@@ -3,61 +3,41 @@ const glob = require('glob-promise');
 const xml2js = require('xml2js');
 const fs = require('fs');
 const util = require('util');
-const comparators = require('./comparators');
 const readFileAsync = util.promisify(fs.readFile);
+
+const settings = require('./settings');
+const comparators = require('./comparators');
+const paths = require('./path_util');
 
 const github = require('@actions/github');
 const core = require('@actions/core');
+const repositorySpotbugsPath = settings.repositorySpotbugsPath;
+
 
 let comparator = comparators.classAndSignatureComparator;
-let relativePath = "../../";
-let spotbugsPath = "build/reports/spotbugs/main.xml";
-let oldSpotbugsPath = ".github/spotbugs";
+let relativePath = "../../"; // @TODO: Pass externally.
+
 
 async function gradlew(task) {
-    return exec("cd " + relativePath + " && java"+
-    " -cp gradle/wrapper/gradle-wrapper.jar org.gradle.wrapper.GradleWrapperMain " + task)
-}
-
-/**
- * Extracts the jme module out of the full path
- * @param {The relative path to the spotbugs output file} path
- */
-function extractModuleName(path) {
-    /* The following code looks bad but we cannot use regex properly here due
-     * to the paths needing to be escaped.
-     */
-    if (path.startsWith(relativePath) && path.endsWith(spotbugsPath)) {
-        return path.substring(relativePath.length, path.indexOf(spotbugsPath) - 1);
-    } else {
-        throw Error("Not a valid path!");
-    }
-}
-
-/**
- * Extracts the jme module out of the full old path
- * @param {The relative path to the spotbugs file of previous runs} path
- */
-function extractModuleNameOldPath(path) {
-    if (path.startsWith(relativePath + oldSpotbugsPath + "/") && path.endsWith(".xml")) {
-        return path.substring((relativePath + oldSpotbugsPath + "/").length, path.indexOf(".xml"));
-    } else {
-        throw Error("Not a valid path");
-    }
+    return exec("cd " + relativePath + " && java -cp " +
+    settings.config.gradle_wrapper.classpath + " " +
+    settings.config.gradle_wrapper.mainClass + " " + task)
 }
 
 async function generateReportsAndAnalyse() {
-    await gradlew("spotbugsMain -Pxml-reports=true --continue").then(out => console.log(out.stdout)).catch(err => { console.error(err) });
+    await gradlew(settings.config.gradle_wrapper.commandLine)
+          .then(out => { console.log(out.stdout); console.log(out.stderr); })
+          .catch(err => { console.error(err) });
 
     let reports = {};
 
-    const files = await glob(relativePath + '**/' + spotbugsPath);
+    const files = await glob(relativePath + '**/' + settings.config.resultPath);
 
     await Promise.all(files.map(async file =>
         {
             try {
                 const result = await xml2js.parseStringPromise(await readFileAsync(file) /*, options */);
-                const moduleName = extractModuleName(file);
+                const moduleName = path.extractModuleName(file);
 
                 if (result.BugCollection.BugInstance) {
                     reports[moduleName] = result.BugCollection.BugInstance;
@@ -81,13 +61,13 @@ function format(obj) {
 async function loadOldReports() {
     let reports = {};
 
-    const files = await glob(relativePath + oldSpotbugsPath + "/*.xml");
+    const files = await glob(relativePath + repositorySpotbugsPath + "/*.xml");
 
     await Promise.all(files.map(async file =>
         {
             try {
                 const result = await xml2js.parseStringPromise(await readFileAsync(file) /*, options */);
-                const moduleName = extractModuleNameOldPath(file);
+                const moduleName = path.extractModuleNameOldPath(file);
 
                 if (result.BugCollection.BugInstance) {
                     reports[moduleName] = result.BugCollection.BugInstance;
@@ -103,20 +83,63 @@ async function loadOldReports() {
     return reports;
 }
 
+function createAnnotations() {
+    const res = [];
+
+    new_bugs.forEach(bug => {
+        const src = bug.bug.SourceLine ? bug.bug.SourceLine : (bug.bug.Method ? bug.bug.Method[0].SourceLine : (bug.bug.Field ? bug.bug.Field[0].SourceLine : undefined));
+
+        if (src) {
+            src.forEach(line => {
+                res.push({
+                    path: bug.module + "/src/main/java/" + line.$.sourcepath,
+                    start_line: line.$.start,
+                    end_line: line.$.end,
+                    annotation_level: bug.bug.priority == "1" ? "failure" : "warning",
+                    message: settings.config.checks.report.new_bug + "\nCategory: " + bug.bug.$.category + "\nType: " + bug.bug.$.type
+                });
+            });
+        } else {
+            console.error("Warning: Found a bug without a SourceLine Attribute!!");
+            console.dir(bug.bug);
+        }
+    });
+
+    solved_bugs.forEach(bug => {
+        const src = bug.bug.SourceLine ? bug.bug.SourceLine : (bug.bug.Method ? bug.bug.Method[0].SourceLine : (bug.bug.Field ? bug.bug.Field[0].SourceLine : undefined));
+        if (src) {
+            src.forEach(line => {
+                res.push({
+                    path: bug.module + "/src/main/java/" + line.$.sourcepath,
+                    start_line: line.$.start,
+                    end_line: line.$.end,
+                    annotation_level: "notice",
+                    message: "🎉 This bug has been solved! 🎊\nCategory: " + bug.bug.$.category + "\nType: [" + bug.bug.$.type + "](https://spotbugs.readthedocs.io/en/latest/bugDescriptions.html)"
+                });
+            });
+        } else {
+            console.error("Warning: Found a bug without a SourceLine Attribute!!");
+            console.dir(bug.bug);
+        }
+    });
+
+    return res;
+}
 
 (async () => {
+    settings.loadConfig();
     const token = process.env.GITHUB_TOKEN;
     const octokit = new github.GitHub(token);
 
     check_run = await octokit.checks.create({
         owner: github.context.repo.owner,
         repo: github.context.repo.repo,
-        name: 'SpotBugs Static Analysis Task',
+        name: settings.config.checks.task.title,
         head_sha: github.context.sha,
         status: 'in_progress',
         output: {
-          title: 'SpotBugs Differential Report',
-          summary: "We're analysing your work currently, it better be good!"
+          title: settings.config.checks.report.title,
+          summary: settings.config.checks.report.pending
         }
     });
 
@@ -165,50 +188,15 @@ async function loadOldReports() {
     }
 
     success = new_bugs.length > 0;
-    summary = "# New Bugs: " + new_bugs.length + "\n";
+    summary = settings.config.checks.summary.header
+    summary += "# New Bugs: " + new_bugs.length + "\n";
     new_bugs.forEach(bug => summary += ("- " + format(bug.bug) + "\n"));
     summary += "# Solved old Bugs: " + solved_bugs.length + "\n";
     solved_bugs.forEach(bug => summary += ("- " + format(bug.bug) + "\n"));
 
     err_too_long = "\n[...] and many more!";
-    const res = [];
 
-    new_bugs.forEach(bug => {
-        const src = bug.bug.SourceLine ? bug.bug.SourceLine : (bug.bug.Method ? bug.bug.Method[0].SourceLine : (bug.bug.Field ? bug.bug.Field[0].SourceLine : undefined));
-
-        if (src) {
-            src.forEach(line => {
-                res.push({
-                    path: bug.module + "/src/main/java/" + line.$.sourcepath,
-                    start_line: line.$.start,
-                    end_line: line.$.end,
-                    annotation_level: bug.bug.priority == "1" ? "failure" : "warning",
-                    message: "A new potential bug 🐛 has been introduced here!\nCategory: " + bug.bug.$.category + "\nType: [" + bug.bug.$.type + "](https://spotbugs.readthedocs.io/en/latest/bugDescriptions.html)"
-                });
-            });
-        } else {
-            console.error("Warning: Found a bug without a SourceLine Attribute!!");
-            console.dir(bug.bug);
-        }
-    });
-
-    solved_bugs.forEach(bug => {
-        const src = bug.bug.SourceLine ? bug.bug.SourceLine : (bug.bug.Method ? bug.bug.Method[0].SourceLine : (bug.bug.Field ? bug.bug.Field[0].SourceLine : undefined));
-        if (src) {
-            src.forEach(line => {
-                res.push({
-                    path: bug.module + "/src/main/java/" + line.$.sourcepath,
-                    start_line: line.$.start,
-                    end_line: line.$.end,
-                    annotation_level: "notice",
-                    message: "🎉 This bug has been solved! 🎊\nCategory: " + bug.bug.$.category + "\nType: [" + bug.bug.$.type + "](https://spotbugs.readthedocs.io/en/latest/bugDescriptions.html)"
-                });
-            });
-        } else {
-            console.error("Warning: Found a bug without a SourceLine Attribute!!");
-            console.dir(bug.bug);
-        }
-    });
+    const res = createAnnotations();
 
     // we have to fill res with all the file annotations.
     const updates = [];
@@ -224,7 +212,7 @@ async function loadOldReports() {
             repo: github.context.repo.repo,
             conclusion: success ? "success" : "failure",
             output: {
-                title: 'SpotBugs Differential Report',
+                title: settings.config.checks.report.title,
                 // @TODO: We don't need this anymore when we have annotations
                 //(summary.length < 65535) ? summary : (summary.substring(0, 65535 - err_too_long.length) + err_too_long),
                 summary: "New Bugs: " + new_bugs.length + "\nFixed Bugs: " + solved_bugs.length,
