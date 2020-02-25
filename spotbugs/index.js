@@ -206,7 +206,7 @@ async function loadOldReports() {
     }
 
     updates.forEach(annotations => {
-        await octokit.checks.update({
+        octokit.checks.update({
             check_run_id: check_run.data.id,
             owner: github.context.repo.owner,
             repo: github.context.repo.repo,
