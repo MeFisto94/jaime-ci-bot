@@ -176,6 +176,7 @@ async function loadOldReports() {
 
     new_bugs.forEach(bug => {
         bug.bug.SourceLine.forEach(line => {
+            console.log(line);
             res.push({
                 path: bug.module + "/" + line.sourcePath,
                 start_line: line.start,
@@ -188,6 +189,7 @@ async function loadOldReports() {
 
     solved_bugs.forEach(bug => {
         bug.bug.SourceLine.forEach(line => {
+            console.log(line);
             res.push({
                 path: bug.module + "/" + line.sourcePath,
                 start_line: line.start,
@@ -219,6 +221,6 @@ async function loadOldReports() {
                 text: summary,
                 annotations: annotations
             }
-        });
+        }).catch(err => console.error(err));
     });
 })();
