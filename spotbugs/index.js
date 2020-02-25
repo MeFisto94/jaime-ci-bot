@@ -177,7 +177,7 @@ async function loadOldReports() {
     new_bugs.forEach(bug => {
         bug.bug.SourceLine.forEach(line => {
             res.push({
-                path: bug.module + "/" + line.$.sourcePath,
+                path: bug.module + "/" + line.$.sourcepath,
                 start_line: line.$.start,
                 end_line: line.$.end,
                 annotation_level: bug.bug.priority == "1" ? "failure" : "warning",
@@ -189,7 +189,7 @@ async function loadOldReports() {
     solved_bugs.forEach(bug => {
         bug.bug.SourceLine.forEach(line => {
             res.push({
-                path: bug.module + "/" + line.$.sourcePath,
+                path: bug.module + "/" + line.$.sourcepath,
                 start_line: line.$.start,
                 end_line: line.$.end,
                 annotation_level: "notice",
