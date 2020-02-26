@@ -7,7 +7,7 @@ const readFileAsync = util.promisify(fs.readFile);
 
 const settings = require('./settings');
 const comparators = require('./comparators');
-const paths = require('./path_util');
+const path = require('./path_util');
 
 const github = require('@actions/github');
 const core = require('@actions/core');
@@ -92,7 +92,7 @@ function createAnnotations() {
         if (src) {
             src.forEach(line => {
                 res.push({
-                    path: bug.module + "/src/main/java/" + line.$.sourcepath,
+                    path: bug.module + settings.config.relativeModulePath + line.$.sourcepath,
                     start_line: line.$.start,
                     end_line: line.$.end,
                     annotation_level: bug.bug.priority == "1" ? "failure" : "warning",
@@ -110,7 +110,7 @@ function createAnnotations() {
         if (src) {
             src.forEach(line => {
                 res.push({
-                    path: bug.module + "/src/main/java/" + line.$.sourcepath,
+                    path: bug.module + settings.config.relativeModulePath + line.$.sourcepath,
                     start_line: line.$.start,
                     end_line: line.$.end,
                     annotation_level: "notice",

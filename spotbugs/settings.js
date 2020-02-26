@@ -4,7 +4,7 @@ const fs = require('fs');
 module.exports = new class Configurator {
   loadConfig = () => {
     try {
-        this.config = yaml.safeLoad(fs.readFileSync(this.repositorySpotbugsPath + "/config.yml", 'utf8'));
+        this.config = yaml.safeLoad(fs.readFileSync(this.repositorySpotbugsPath + "/config.yaml", 'utf8'));
       } catch (e) {
         console.error(e);
       }

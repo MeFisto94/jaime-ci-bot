@@ -4,6 +4,11 @@
 # The Path to the spotbugs report, relative to the module
 # (subfolder of the working directory)
 resultPath: build/reports/spotbugs/main.xml
+
+# This is the path from the module to the actual source files and
+# as such required to to correctly link the bugs to the changes in the UI
+relativeModulePath: /src/main/java/
+
 checks:
     summary:
         header: Click [here](https://spotbugs.readthedocs.io/en/latest/bugDescriptions.html) for a description of the otherwise cryptic error messages!
