@@ -1,0 +1,54 @@
+{
+  "name": "jaime-ci-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A CI Bot based on Probot to aid Pull Requests on the jMonkeyEngine Repositories",
+  "author": "MeFisto94 <MeFisto94@users.noreply.github.com>",
+  "license": "BSD 3-Clause",
+  "repository": "https://github.com/MeFisto94/jaime-ci-bot.git",
+  "homepage": "https://github.com/MeFisto94/jaime-ci-bot",
+  "bugs": "https://github.com/MeFisto94/jaime-ci-bot/issues",
+  "keywords": [
+    "probot",
+    "github",
+    "probot-app"
+  ],
+  "scripts": {
+    "dev": "nodemon",
+    "start": "probot run ./src/index.js",
+    "lint": "eslint --fix src"
+  },
+  "dependencies": {
+    "child-process-promise": "^2.2.1",
+    "diff": "^4.0.2",
+    "git-diff": "^2.0.6",
+    "glob-promise": "^3.4.0",
+    "js-yaml": "^3.14.0",
+    "p-queue": "^6.6.1",
+    "probot": "^9.15.1",
+    "tmp-promise": "^3.0.2",
+    "workerpool": "^5.0.4",
+    "xml2js": "^0.4.23",
+    "xmldom": "^0.2.1",
+    "xpath": "0.0.27"
+  },
+  "devDependencies": {
+    "babel-eslint": "^10.1.0",
+    "eslint": "^7.9.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-plugin-import": "^2.22.0",
+    "nock": "^11.9.1",
+    "nodemon": "^2.0.4",
+    "smee-client": "^1.2.2"
+  },
+  "engines": {
+    "node": ">= 8.3.0"
+  },
+  "nodemonConfig": {
+    "exec": "npm start",
+    "watch": [
+      ".env",
+      "."
+    ]
+  }
+}

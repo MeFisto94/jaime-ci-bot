@@ -1,0 +1,34 @@
+# This is the default configuration file for the jaime-ci bot.
+# Most projects should work fine with these settings.
+
+# This is the path from the module to the actual source files and
+# as such required to to correctly link the bugs to the changes in the UI
+relativeModulePath: /src/main/java/
+
+# This is the path, where the spotbugs expectations are stored
+spotbugs:
+    expectationsPath: .github/spotbugs
+    # The Path to the spotbugs report, relative to the module
+    # (subfolder of the working directory)
+    resultPath: build/reports/spotbugs/main.xml
+    checks:
+        summary:
+            header: Click [here](https://spotbugs.readthedocs.io/en/latest/bugDescriptions.html) for a description of the otherwise cryptic error messages!
+        report:
+            title: SpotBugs Differential Report
+            pending: We're analysing your work currently, it better be good!
+            new_bug: A new potential bug 🐛 has been introduced here!
+        task:
+            title: SpotBugs Static Analysis Task
+
+    # xml-reports is a specific property at jMonkeyEngine, it allows
+    # us to have HTML reports as the default output format, but make
+    # CI generate XML reports so we can parse them easily.
+    gradleCommandLine: spotbugsMain -Pxml-reports=true --continue
+
+# In almost all cases, these defaults should be good enough.
+# For non gradle builds, you can change this to invoke SpotBugs directly,
+# though.
+gradle_wrapper:
+    classpath: gradle/wrapper/gradle-wrapper.jar
+    mainClass: org.gradle.wrapper.GradleWrapperMain
