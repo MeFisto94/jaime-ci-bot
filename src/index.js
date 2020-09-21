@@ -1,6 +1,6 @@
 const { default: PQueue } = require('p-queue');
 const { exec } = require('child-process-promise');
-const { cwd } = require('process');
+// const { cwd } = require('process');
 const tmp = require('tmp-promise');
 const spotbugsCheck = require('./checks/spotbugsCheck.js');
 const settings = require('./settings.js');
