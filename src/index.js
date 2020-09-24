@@ -6,7 +6,7 @@ const spotbugsCheck = require('./checks/spotbugsCheck.js');
 const settings = require('./settings.js');
 const { gradlew } = require('./util.js');
 
-async function doAnalysis(context, checkRun) {
+async function doAnalysis(context, checkRun, pullRequest, after) {
   if (checkRun) {
     context.github.checks.update({
       check_run_id: checkRun.data.id,
@@ -31,13 +31,23 @@ async function doAnalysis(context, checkRun) {
         },
       );
       context.log('Clone successful');
-      await exec(
-        `git pull origin pull/${context.payload.check_suite.pull_requests[0].number}/head`,
-        {
-          cwd: dir.path,
-          shell: true,
-        },
-      );
+      if (pullRequest) {
+        await exec(
+          `git pull origin pull/${context.payload.check_suite.pull_requests[0].number}/head`,
+          {
+            cwd: dir.path,
+            shell: true,
+          },
+        );
+      } else {
+        await exec(
+          `git reset --hard ${after}`,
+          {
+            cwd: dir.path,
+            shell: true,
+          },
+        );
+      }
       context.log(`Successfully checked out to ${dir.path}`);
 
       // for dev, use cwd()
@@ -80,59 +90,57 @@ async function check(queue, context) {
   // @TODO: Extract Pull Request object
   const pullRequest = context.payload.check_suite.pull_requests !== undefined
                     || context.payload.check_run.pull_requests !== undefined;
+  const { before, after } = context.payload.check_suite;
 
-  if (pullRequest) {
-    const { /* before, */after } = context.payload.check_suite;
-    /* we could use the above before, if we were only to analyze the diff,
-     * but most analysis is done on the whole code base after applying the Commit
-     * thus we currently ignore the before of the check run
-     */
+  /* we could use the "before", if we were only to analyze the diff,
+   * but most analysis is done on the whole code base after applying the commit
+   * thus we need to use the PR base sha, for pull requests
+   */
+  const compare = await context.github.repos.compareCommits(
+    context.repo({
+      base: pullRequest ? context.payload.check_suite.pull_requests[0].base.sha : before,
+      head: after,
+    }),
+  );
 
-    const compare = await context.github.repos.compareCommits(
-      context.repo({
-        // base: before,
-        base: context.payload.check_suite.pull_requests[0].base.sha,
-        head: after,
-      }),
-    );
+  // We don't care if it's add, change or remove, all are potentially dangerous
+  const forbiddenFile = compare.data.files.find(
+    (file) => file.filename.startsWith('.github')
+      || file.filename.startsWith('gradle')
+      || file.filename.endsWith('.gradle'),
+    // || !file.filename.endsWith('.java)
+  );
 
-    // We don't care if it's add, change or remove, all are potentially dangerous
-    const forbiddenFile = compare.data.files.find(
-      (file) => file.filename.startsWith('.github')
-        || file.filename.startsWith('gradle')
-        || file.filename.endsWith('.gradle'),
-    );
-
-    if (forbiddenFile !== undefined) {
-      context.log('Analysis stopped because this is a PR, but a critical build file has been '
-      + 'modified');
+  if (forbiddenFile !== undefined) {
+    context.log('Analysis stopped because a critical build file has been modified');
+    if (pullRequest) {
       context.github.issues.createComment({
         owner: context.payload.repository.owner.login,
         repo: context.payload.repository.name,
         issue_number: context.payload.check_suite.pull_requests[0].number,
         body: `The commit ${after} won't be analyzed, because it modified ${forbiddenFile}`,
       });
-      return;
     }
-
-    let checkRun;
-    if (queue.pending > 0) {
-      checkRun = await context.github.checks.create(context.repo({
-        // owner: context.payload.repository.owner.login,
-        // repo: context.payload.repository.name,
-        name: 'CI Analysis',
-        head_sha: context.payload.check_suite.head_sha,
-        status: 'queued',
-        output: {
-          title: 'Waiting for a free slot',
-          summary: "This task has been queued and will be executed once you've been assigned an "
-          + 'empty slot',
-        },
-      })); // await in case the queue would be faster than the Github API
-    }
-
-    queue.add(() => doAnalysis(context, checkRun));
+    return;
   }
+
+  let checkRun;
+  if (queue.pending > 0) {
+    checkRun = await context.github.checks.create(context.repo({
+      // owner: context.payload.repository.owner.login,
+      // repo: context.payload.repository.name,
+      name: 'CI Analysis',
+      head_sha: context.payload.check_suite.head_sha,
+      status: 'queued',
+      output: {
+        title: 'Waiting for a free slot',
+        summary: "This task has been queued and will be executed once you've been assigned an "
+        + 'empty slot',
+      },
+    })); // await in case the queue would be faster than the Github API
+  }
+
+  queue.add(() => doAnalysis(context, checkRun, pullRequest, after));
 }
 
 module.exports = (app) => {
