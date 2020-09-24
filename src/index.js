@@ -31,6 +31,13 @@ async function doAnalysis(context, checkRun, pullRequest, after) {
         },
       );
       context.log('Clone successful');
+      await exec(
+        'git config user.email "ci@jmonkeyengine.com" && git config user.name "Jaime CI-Bot"',
+        {
+          cwd: dir.path,
+          shell: true,
+        },
+      );
       if (pullRequest) {
         await exec(
           `git pull origin pull/${context.payload.check_suite.pull_requests[0].number}/head`,
@@ -89,7 +96,7 @@ async function check(queue, context) {
   // The Problem is, the path might change based on the actual event
   // @TODO: Extract Pull Request object
   const pullRequest = context.payload.check_suite.pull_requests !== undefined
-                    || context.payload.check_run.pull_requests !== undefined;
+                    && context.payload.check_suite.pull_requests.length === 1;
   const { before, after } = context.payload.check_suite;
 
   /* we could use the "before", if we were only to analyze the diff,
